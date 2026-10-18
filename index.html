@@ -1,0 +1,54 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>カラオケくじ</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#f6f2e9;color:#161616;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+main{max-width:760px;margin:auto;padding:30px 30px 55px} h1{font-size:38px;margin:0 0 6px;font-weight:850;letter-spacing:.02em}
+.sub{font-size:21px;color:#777;margin-bottom:36px}.result{height:410px;background:#fff;border:2px solid #ddd6cc;border-radius:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:35px}
+.next{letter-spacing:.25em;color:#777;font-size:20px;margin-bottom:28px}.song{font-size:42px;font-weight:850;line-height:1.25}.artist{font-size:22px;margin-top:14px;color:#555}
+button{font:inherit;font-weight:750;border:2px solid #ddd6cc;background:#fff;border-radius:30px;padding:22px 16px;color:#171717}
+.primary{width:100%;margin-top:26px;background:#171717;color:#fff;border-color:#171717;font-size:28px;padding:29px 20px}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px}.actions button{font-size:20px}
+.count{text-align:center;color:#777;font-size:20px;margin:25px 0}
+details{background:#fff;border:2px solid #ddd6cc;border-radius:30px;margin-top:20px;padding:0 25px}summary{cursor:pointer;list-style:none;font-size:24px;font-weight:800;padding:28px 0}summary::-webkit-details-marker{display:none}
+summary:before{content:"▶";font-size:18px;margin-right:10px}.inside{padding:0 0 25px}
+input{width:100%;font:inherit;font-size:18px;padding:17px;border:1.5px solid #d7d0c6;border-radius:16px;background:#faf9f6;margin-bottom:10px}
+.addrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.addbtn{width:100%;background:#173b2d;color:#fff;border:0;padding:18px;margin-bottom:16px}
+#songList{max-height:310px;overflow:auto;border-top:1px solid #eee}.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 2px;border-bottom:1px solid #eee}.meta{font-size:14px;color:#777}.delete{padding:8px 12px;border-radius:14px;font-size:13px}
+.reset{width:100%;margin:8px 0 2px}.note{text-align:center;color:#777;font-size:17px;line-height:1.7;margin-top:28px}
+@media(max-width:560px){main{padding:26px 17px 45px}h1{font-size:32px}.sub{font-size:18px}.result{height:330px;border-radius:34px}.song{font-size:31px}.primary{font-size:23px;padding:24px}.actions{gap:8px}.actions button{font-size:16px;padding:19px 8px}summary{font-size:20px}.addrow{grid-template-columns:1fr}.note{font-size:14px}}
+</style></head><body><main>
+<h1>カラオケくじ</h1><div class="sub">レイちゃん専用・被りなし抽選</div>
+<section class="result"><div class="next">NEXT SONG</div><div id="song" class="song">ボタンを押して一曲引く</div><div id="artist" class="artist"></div></section>
+<button class="primary" onclick="draw()">次の曲を引く</button>
+<div class="actions"><button onclick="done()">歌った</button><button onclick="skip()">今日はパス</button><button onclick="putBack()">箱に戻す</button></div>
+<div id="count" class="count"></div>
+
+<details><summary>曲を追加・削除</summary><div class="inside">
+<div class="addrow"><input id="titleIn" placeholder="曲名"><input id="artistIn" placeholder="アーティスト"></div>
+<button class="addbtn" onclick="addSong()">曲を追加</button>
+<div id="songList"></div>
+</div></details>
+
+<details><summary>今日のくじをリセット</summary><div class="inside">
+<button class="reset" onclick="resetToday()">全曲を今日の箱に戻す</button>
+</div></details>
+<div class="note">「歌った」「今日はパス」は今日の箱から除外。<br>「箱に戻す」はもう一度出る可能性あり。</div>
+</main><script>
+const initial=[{"title": "Automatic", "artist": "宇多田ヒカル"}, {"title": "First Love", "artist": "宇多田ヒカル"}, {"title": "One Last Kiss", "artist": "宇多田ヒカル"}, {"title": "Flavor Of Life", "artist": "宇多田ヒカル"}, {"title": "Beautiful World", "artist": "宇多田ヒカル"}, {"title": "DISTANCE", "artist": "宇多田ヒカル"}, {"title": "traveling", "artist": "宇多田ヒカル"}, {"title": "Can You Keep A Secret?", "artist": "宇多田ヒカル"}, {"title": "Gold ～また逢う日まで～", "artist": "宇多田ヒカル"}, {"title": "SAKURAドロップス", "artist": "宇多田ヒカル"}, {"title": "君に夢中", "artist": "宇多田ヒカル"}, {"title": "season", "artist": "嵐"}, {"title": "One Love", "artist": "嵐"}, {"title": "Love so sweet", "artist": "嵐"}, {"title": "Beautiful days", "artist": "嵐"}, {"title": "サクラ咲ケ", "artist": "嵐"}, {"title": "Still...", "artist": "嵐"}, {"title": "ロミオとシンデレラ", "artist": "doriko"}, {"title": "シャルル", "artist": "バルーン"}, {"title": "フォニイ", "artist": "ツミキ"}, {"title": "恋愛裁判", "artist": "40mP"}, {"title": "からくりピエロ", "artist": "40mP"}, {"title": "妄想感傷代償連盟", "artist": "DECO*27"}, {"title": "メルト", "artist": "ryo"}, {"title": "ワールドイズマイン", "artist": "ryo"}, {"title": "ローリンガール", "artist": "wowaka"}, {"title": "裏表ラバーズ", "artist": "wowaka"}, {"title": "ハッピーシンセサイザ", "artist": "EasyPop"}, {"title": "いーあるふぁんくらぶ", "artist": "みきとP"}, {"title": "神っぽいな", "artist": "ピノキオピー"}, {"title": "ゴーストルール", "artist": "DECO*27"}, {"title": "Just Be Friends", "artist": "Dixie Flatline"}, {"title": "magnet", "artist": "minato"}, {"title": "マトリョシカ", "artist": "ハチ"}, {"title": "炉心融解", "artist": "iroha(sasaki)"}, {"title": "え？あぁ、そう。", "artist": "蝶々P"}, {"title": "カゲロウデイズ", "artist": "じん"}, {"title": "メランコリック", "artist": "Junky"}, {"title": "脳漿炸裂ガール", "artist": "れるりり"}, {"title": "深海少女", "artist": "ゆうゆ"}, {"title": "天ノ弱", "artist": "164"}, {"title": "妄想税", "artist": "DECO*27"}, {"title": "六兆年と一夜物語", "artist": "kemu"}, {"title": "右肩の蝶", "artist": "のりぴー"}, {"title": "愛Dee", "artist": "Mitchie M"}, {"title": "乙女解剖", "artist": "DECO*27"}, {"title": "えれくとりっく・えんじぇぅ", "artist": "ヤスオ"}, {"title": "ヒビカセ", "artist": "ギガ"}, {"title": "only my railgun", "artist": "fripSide"}, {"title": "ハッピーエンド", "artist": "back number"}, {"title": "ヒカリへ", "artist": "miwa"}, {"title": "世界は恋に落ちている", "artist": "CHiCO with HoneyWorks"}, {"title": "ロビンソン", "artist": "スピッツ"}, {"title": "Checklist", "artist": "MAX"}, {"title": "fake face dance music", "artist": "音田雅則"}, {"title": "SAKURA", "artist": "いきものがかり"}, {"title": "Attitude", "artist": "Mrs. GREEN APPLE"}, {"title": "ハレンチ", "artist": "ちゃんみな"}, {"title": "Overdose", "artist": "なとり"}, {"title": "Tokyo Flash", "artist": "Vaundy"}, {"title": "Nobody", "artist": "Wonder Girls"}, {"title": "Stay With Me", "artist": "CHANYEOL & PUNCH"}, {"title": "idontwannabeyouanymore", "artist": "Billie Eilish"}, {"title": "We Are the World", "artist": "USA for Africa"}, {"title": "酔いどれ知らず", "artist": "Kanaria"}, {"title": "Flamingo", "artist": "米津玄師"}, {"title": "ただ君に晴れ", "artist": "ヨルシカ"}, {"title": "夜撫でるメノウ", "artist": "Ayase"}, {"title": "シュガーソングとビターステップ", "artist": "UNISON SQUARE GARDEN"}, {"title": "Move on now!", "artist": "アイカツ！"}, {"title": "Signalize!", "artist": "アイカツ！"}, {"title": "Take Me Higher", "artist": "アイカツ！"}, {"title": "secret base ～君がくれたもの～", "artist": "ZONE"}, {"title": "セレナーデ", "artist": "なとり"}];
+const KALL="rei_karaoke_all_classic_v2", KBOX="rei_karaoke_box_classic_v2";
+let all=JSON.parse(localStorage.getItem(KALL)||"null")||initial.slice();
+let box=JSON.parse(localStorage.getItem(KBOX)||"null")||all.map((_,i)=>i);
+let current=null;
+function save(){localStorage.setItem(KALL,JSON.stringify(all));localStorage.setItem(KBOX,JSON.stringify(box));render()}
+function draw(){if(!box.length){song.textContent="今日の箱は空です";artist.textContent="リセットすると全曲戻ります";return}current=box[Math.floor(Math.random()*box.length)];song.textContent=all[current].title;artist.textContent="— "+all[current].artist}
+function removeCurrent(msg){if(current===null)return;box=box.filter(i=>i!==current);current=null;song.textContent=msg;artist.textContent="";save()}
+function done(){removeCurrent("歌唱済み。次を引こう")}
+function skip(){removeCurrent("今日はパス")}
+function putBack(){if(current===null)return;current=null;song.textContent="箱に戻しました";artist.textContent="";render()}
+function addSong(){let t=titleIn.value.trim(),a=artistIn.value.trim();if(!t)return;all.push({title:t,artist:a});box.push(all.length-1);titleIn.value="";artistIn.value="";save()}
+function del(i){if(!confirm("「"+all[i].title+"」を削除する？"))return;all.splice(i,1);box=all.map((_,j)=>j);current=null;song.textContent="曲を削除しました";artist.textContent="";save()}
+function resetToday(){if(!confirm("今日のくじを全曲入りに戻す？"))return;box=all.map((_,i)=>i);current=null;song.textContent="リセットしました";artist.textContent="";save()}
+function render(){count.textContent="残り "+box.length+" / 全"+all.length+"曲";songList.innerHTML=all.map((s,i)=>`<div class="item"><div><b>${s.title}</b><div class="meta">${s.artist||"アーティスト未入力"}</div></div><button class="delete" onclick="del(${i})">削除</button></div>`).join("")}
+render();
+</script></body></html>
